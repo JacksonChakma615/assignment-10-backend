@@ -30,65 +30,117 @@ async function run() {
 
     // Get all properties
     app.get("/allProperties", async (req, res) => {
-      const result = await propertiesCollection.find().toArray();
-      res.send(result);
+      try {
+        const result = await propertiesCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Server error" });
+      }
     });
 
     // Get single property by ID
-    // app.get("/allProperties/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
-    //   res.send(property);
-    // });
-
     app.get("/allProperties/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
+      try {
+        const id = req.params.id;
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).send({ error: "Invalid ID format" });
-    }
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: "Invalid ID format" });
+        }
 
-    const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
+        const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
 
-    if (!property) {
-      return res.status(404).send({ error: "Property not found" });
-    }
+        if (!property) {
+          return res.status(404).send({ error: "Property not found" });
+        }
 
-    res.send(property);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: "Server error" });
-  }
-});
-
+        res.send(property);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: "Server error" });
+      }
+    });
 
     // Add new property
     app.post("/allProperties", async (req, res) => {
-      const property = req.body;
-      if (!property.propertyName || !property.userEmail) {
-        return res.status(400).send({ message: "Missing required fields" });
+      try {
+        const property = req.body;
+        if (!property.propertyName || !property.userEmail) {
+          return res.status(400).send({ message: "Missing required fields" });
+        }
+        const result = await propertiesCollection.insertOne(property);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
       }
-      const result = await propertiesCollection.insertOne(property);
-      res.send(result);
     });
 
     // Update property
-    app.put("/allProperties/:id", async (req, res) => {
-      const id = req.params.id;
-      const updatedData = req.body;
-      const result = await propertiesCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedData }
-      );
-      res.send(result);
-    });
+    // app.put("/allProperties/:id", async (req, res) => {
+    //   try {
+    //     const id = req.params.id;
+    //     if (!ObjectId.isValid(id)) {
+    //       return res.status(400).send({ error: "Invalid ID format" });
+    //     }
 
+    //     const updatedData = req.body;
+    //     const result = await propertiesCollection.updateOne(
+    //       { _id: new ObjectId(id) },
+    //       { $set: updatedData }
+    //     );
+
+    //     if (result.matchedCount === 0) {
+    //       return res.status(404).send({ error: "Property not found" });
+    //     }
+
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).send({ message: "Server error" });
+    //   }
+    // });
+      app.put("/allProperties/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) return res.status(400).send({ error: "Invalid ID" });
+
+        const updatedData = req.body;
+        if (updatedData.price) updatedData.price = Number(updatedData.price);
+
+        const result = await propertiesCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+
+        if (result.matchedCount === 0) return res.status(404).send({ error: "Property not found" });
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Server error" });
+      }
+    });
+    
     // Delete property
     app.delete("/myProperties/:id", async (req, res) => {
-      const id = req.params.id;
-      const result = await propertiesCollection.deleteOne({ _id: new ObjectId(id) });
-      res.send(result);
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: "Invalid ID format" });
+        }
+
+        const result = await propertiesCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ error: "Property not found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
     });
 
     // Get properties of logged-in user
