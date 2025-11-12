@@ -26,7 +26,7 @@ async function run() {
 
     console.log("✅ Connected to MongoDB");
 
-    // ------------------- PROPERTIES ---
+    // ------------------- PROPERTIES ----
 
     // Get all properties
     app.get("/allProperties", async (req, res) => {
