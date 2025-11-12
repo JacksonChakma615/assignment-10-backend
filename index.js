@@ -35,11 +35,33 @@ async function run() {
     });
 
     // Get single property by ID
+    // app.get("/allProperties/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
+    //   res.send(property);
+    // });
+
     app.get("/allProperties/:id", async (req, res) => {
-      const id = req.params.id;
-      const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
-      res.send(property);
-    });
+  try {
+    const id = req.params.id;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "Invalid ID format" });
+    }
+
+    const property = await propertiesCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!property) {
+      return res.status(404).send({ error: "Property not found" });
+    }
+
+    res.send(property);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Server error" });
+  }
+});
+
 
     // Add new property
     app.post("/allProperties", async (req, res) => {
